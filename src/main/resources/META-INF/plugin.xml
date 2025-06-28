@@ -1,15 +1,20 @@
 <!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
 <idea-plugin>
-    <id>com.github.namhle.intellijplugin</id>
-    <name>intellij-plugin</name>
-    <vendor>nam-hle</vendor>
+    <id>com.github.nadlejs.nadle</id>
+    <name>Nadle Task Runner</name>
+    <vendor url="https://github.com/nadlejs">Nadle</vendor>
+
+    <description><![CDATA[
+        Integrates Nadle task execution into IntelliJ IDEA.<br/>
+        Adds run icons to <code>task.register("name", fn)</code> definitions and enables direct execution.<br/>
+        Works seamlessly with <code>nadle.config.ts</code>.
+    ]]></description>
 
     <depends>com.intellij.modules.platform</depends>
-
-    <resource-bundle>messages.MyBundle</resource-bundle>
+    <depends>JavaScript</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <toolWindow factoryClass="com.github.namhle.intellijplugin.toolWindow.MyToolWindowFactory" id="MyToolWindow"/>
-        <postStartupActivity implementation="com.github.namhle.intellijplugin.startup.MyProjectActivity" />
+        <lineMarkerProvider language="TypeScript"
+                            implementationClass="com.github.nadlejs.intellij.plugin.NadleTaskLineMarkerProvider"/>
     </extensions>
 </idea-plugin>
