@@ -13,7 +13,6 @@
 
     <depends>com.intellij.modules.platform</depends>
     <depends>JavaScript</depends>
-    <depends optional="true" config-file="nadle-lsp.xml">com.intellij.modules.lsp</depends>
 
     <extensions defaultExtensionNs="com.intellij">
         <runLineMarkerContributor language="TypeScript"
@@ -29,5 +28,11 @@
 
         <postStartupActivity
                 implementation="com.github.nadlejs.intellij.plugin.NadleTaskExecutionListener"/>
+
+        <gotoDeclarationHandler
+                implementation="com.github.nadlejs.intellij.plugin.NadleTaskGotoDeclarationHandler"/>
+
+        <platform.lsp.serverSupportProvider
+                implementation="com.github.nadlejs.intellij.plugin.NadleLspServerSupportProvider"/>
     </extensions>
 </idea-plugin>

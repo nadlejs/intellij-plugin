@@ -10,26 +10,39 @@ import javax.swing.Icon
 class NadleTaskRunLineMarkerContributor : RunLineMarkerContributor() {
 
 	override fun getInfo(element: PsiElement): Info? {
+		// Only process leaf elements to produce exactly one icon per call
+		if (element.firstChild != null) return null
+
 		val file = element.containingFile ?: return null
 		val virtualFile = file.virtualFile ?: return null
 
-		if (!NadleFileUtil.isNadleConfigFile(virtualFile)) {
-			return null
-		}
+		if (!NadleFileUtil.isNadleConfigFile(virtualFile)) return null
 
-		val elementText = element.text ?: return null
-		val taskName = NadleFileUtil.extractTaskName(elementText) ?: return null
+		// Anchor on the "tasks" identifier leaf to get one icon per
+		// tasks.register() call, placed at the start of the expression
+		if (element.text != "tasks") return null
 
-		// Only process elements large enough to contain the full pattern
-		// but avoid processing the entire file PSI root
-		if (element.parent?.parent == null || element == file) {
-			return null
-		}
+		val callText = findEnclosingCallText(element) ?: return null
+		val taskName = NadleFileUtil.extractTaskName(callText) ?: return null
 
 		val icon = getTaskStateIcon(virtualFile.path, taskName, element.project)
 		val actions = ExecutorAction.getActions(0)
 
 		return Info(icon, actions) { "Run Nadle task: $taskName" }
+	}
+
+	private fun findEnclosingCallText(element: PsiElement): String? {
+		var current = element.parent
+		var depth = 0
+		while (current != null && depth < 10) {
+			val text = current.text
+			if (NadleFileUtil.TASK_REGISTER_PATTERN.containsMatchIn(text)) {
+				return text
+			}
+			current = current.parent
+			depth++
+		}
+		return null
 	}
 
 	companion object {

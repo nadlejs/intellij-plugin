@@ -7,7 +7,7 @@ import com.intellij.execution.Executor
 import com.intellij.execution.configurations.*
 import com.intellij.execution.executors.DefaultDebugExecutor
 import com.intellij.execution.filters.TextConsoleBuilderFactory
-import com.intellij.execution.process.OSProcessHandler
+import com.intellij.execution.process.KillableColoredProcessHandler
 import com.intellij.execution.process.ProcessHandler
 import com.intellij.execution.runners.ExecutionEnvironment
 import com.intellij.execution.runners.ProgramRunner
@@ -108,7 +108,7 @@ class NadleTaskRunConfiguration(
 			}
 
 			return try {
-				OSProcessHandler(commandLine)
+				KillableColoredProcessHandler(commandLine)
 			} catch (e: ExecutionException) {
 				throw ExecutionException(
 					"Failed to start Nadle task: ${e.message}", e
@@ -123,6 +123,7 @@ class NadleTaskRunConfiguration(
 				exePath = "npx"
 				addParameter("nadle")
 				addParameter(configuration.taskName)
+				addParameter("--no-footer")
 				workDirectory = File(projectBasePath)
 			}
 		}
@@ -137,6 +138,7 @@ class NadleTaskRunConfiguration(
 				addParameter("--inspect-brk")
 				addParameter(nadleBin)
 				addParameter(configuration.taskName)
+				addParameter("--no-footer")
 				workDirectory = File(projectBasePath)
 			}
 		}

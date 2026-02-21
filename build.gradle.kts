@@ -124,7 +124,48 @@ kover {
     }
 }
 
+abstract class BundleLspServerTask : DefaultTask() {
+
+    @get:InputDirectory
+    abstract val serverPackageDir: DirectoryProperty
+
+    @get:OutputDirectory
+    abstract val outputDirectory: DirectoryProperty
+
+    @TaskAction
+    fun bundle() {
+        val serverPkg = serverPackageDir.get().asFile
+        if (!serverPkg.exists()) {
+            throw GradleException("@nadle/language-server not found. Run 'pnpm install' first.")
+        }
+
+        val outputDir = outputDirectory.get().asFile
+        val libDir = File(outputDir, "lib")
+        libDir.mkdirs()
+
+        File(serverPkg, "server.mjs").copyTo(File(outputDir, "server.mjs"), overwrite = true)
+        File(libDir, "package.json").writeText("""{"type":"module"}""")
+        File(serverPkg, "lib").listFiles()?.filter { it.name.endsWith(".js") }?.forEach {
+            it.copyTo(File(libDir, it.name), overwrite = true)
+        }
+    }
+}
+
+val lspServerDir = layout.buildDirectory.dir("language-server")
+
+val bundleLspServer by tasks.registering(BundleLspServerTask::class) {
+    serverPackageDir.set(layout.projectDirectory.dir("node_modules/@nadle/language-server"))
+    outputDirectory.set(lspServerDir)
+}
+
 tasks {
+    processResources {
+        dependsOn(bundleLspServer)
+        from(lspServerDir) {
+            into("language-server")
+        }
+    }
+
     wrapper {
         gradleVersion = providers.gradleProperty("gradleVersion").get()
     }

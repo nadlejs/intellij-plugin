@@ -47,18 +47,29 @@ class NadleLspServerDescriptor(
 	}
 
 	private fun resolveServerPath(): String? {
-		val basePath = project.basePath ?: return null
+		val basePath = project.basePath
 
-		// Check project-local node_modules first
-		val localServer = Path.of(
-			basePath,
-			"node_modules",
-			"@nadle",
-			"language-server",
-			"server.mjs"
-		)
-		if (Files.exists(localServer)) {
-			return localServer.toString()
+		if (basePath != null) {
+			val projectCandidates = listOf(
+				// Consuming project: installed as dependency
+				Path.of(basePath, "node_modules", "@nadle", "language-server", "server.mjs"),
+				// Monorepo workspace: packages/language-server/
+				Path.of(basePath, "packages", "language-server", "server.mjs")
+			)
+
+			for (candidate in projectCandidates) {
+				if (Files.exists(candidate)) {
+					LOG.info("Found Nadle language server at: $candidate")
+					return candidate.toString()
+				}
+			}
+		}
+
+		// Use bundled language server extracted from plugin resources
+		val bundled = NadleLspServerExtractor.getServerPath()
+		if (bundled != null && Files.exists(bundled)) {
+			LOG.info("Using bundled Nadle language server at: $bundled")
+			return bundled.toString()
 		}
 
 		// Try global resolution via which/where
