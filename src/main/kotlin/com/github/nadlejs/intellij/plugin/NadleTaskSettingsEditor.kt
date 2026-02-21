@@ -1,5 +1,6 @@
 package com.github.nadlejs.intellij.plugin
 
+import com.intellij.codeInsight.AutoPopupController
 import com.intellij.execution.configuration.EnvironmentVariablesTextFieldWithBrowseButton
 import com.intellij.javascript.nodejs.interpreter.NodeJsInterpreterField
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory
@@ -9,9 +10,12 @@ import com.intellij.openapi.ui.TextFieldWithBrowseButton
 import com.intellij.ui.TextFieldWithAutoCompletion
 import com.intellij.ui.dsl.builder.AlignX
 import com.intellij.ui.dsl.builder.panel
+import java.awt.event.FocusAdapter
+import java.awt.event.FocusEvent
 import java.nio.file.Path
 import javax.swing.JComponent
 import javax.swing.JTextField
+import javax.swing.SwingUtilities
 import javax.swing.Timer
 import javax.swing.event.DocumentEvent
 import javax.swing.event.DocumentListener
@@ -41,6 +45,17 @@ class NadleTaskSettingsEditor(
 	}
 
 	init {
+		taskNameField.addSettingsProvider { editor ->
+			editor.contentComponent.addFocusListener(object : FocusAdapter() {
+				override fun focusGained(e: FocusEvent?) {
+					SwingUtilities.invokeLater {
+						AutoPopupController.getInstance(project)
+							.scheduleAutoPopup(editor)
+					}
+				}
+			})
+		}
+
 		workingDirectoryField.textField.document.addDocumentListener(
 			object : DocumentListener {
 				override fun insertUpdate(e: DocumentEvent?) = scheduleRefresh()
