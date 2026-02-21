@@ -39,9 +39,12 @@ class NadleTaskConfigurationProducer : LazyRunConfigurationProducer<NadleTaskRun
 		context: ConfigurationContext
 	): Boolean {
 		val element = context.psiLocation ?: return false
+		val file = element.containingFile ?: return false
+		val virtualFile = file.virtualFile ?: return false
 		val taskName = findTaskName(element) ?: return false
 
 		return taskName == configuration.taskName
+			&& virtualFile.path == configuration.configFilePath
 	}
 
 	private fun findTaskName(element: PsiElement): String? {
