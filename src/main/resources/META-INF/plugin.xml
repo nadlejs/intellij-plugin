@@ -16,30 +16,30 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <runLineMarkerContributor language="TypeScript"
-                                  implementationClass="com.github.nadlejs.intellij.plugin.NadleTaskRunLineMarkerContributor"/>
+                                  implementationClass="com.github.nadlejs.intellij.plugin.run.NadleTaskRunLineMarkerContributor"/>
         <runLineMarkerContributor language="JavaScript"
-                                  implementationClass="com.github.nadlejs.intellij.plugin.NadleTaskRunLineMarkerContributor"/>
+                                  implementationClass="com.github.nadlejs.intellij.plugin.run.NadleTaskRunLineMarkerContributor"/>
 
         <configurationType
-                implementation="com.github.nadlejs.intellij.plugin.NadleTaskConfigurationType"/>
+                implementation="com.github.nadlejs.intellij.plugin.run.NadleTaskConfigurationType"/>
 
         <runConfigurationProducer
-                implementation="com.github.nadlejs.intellij.plugin.NadleTaskConfigurationProducer"/>
+                implementation="com.github.nadlejs.intellij.plugin.run.NadleTaskConfigurationProducer"/>
 
         <postStartupActivity
-                implementation="com.github.nadlejs.intellij.plugin.NadleTaskExecutionListener"/>
+                implementation="com.github.nadlejs.intellij.plugin.run.NadleTaskExecutionListener"/>
 
         <gotoDeclarationHandler
-                implementation="com.github.nadlejs.intellij.plugin.NadleTaskGotoDeclarationHandler"/>
+                implementation="com.github.nadlejs.intellij.plugin.navigation.NadleTaskGotoDeclarationHandler"/>
 
         <platform.lsp.serverSupportProvider
-                implementation="com.github.nadlejs.intellij.plugin.NadleLspServerSupportProvider"/>
+                implementation="com.github.nadlejs.intellij.plugin.lsp.NadleLspServerSupportProvider"/>
 
         <lang.psiStructureViewFactory language="JavaScript"
                                        order="first"
-                                       implementationClass="com.github.nadlejs.intellij.plugin.NadleStructureViewFactory"/>
+                                       implementationClass="com.github.nadlejs.intellij.plugin.structure.NadleStructureViewFactory"/>
         <lang.psiStructureViewFactory language="TypeScript"
                                        order="first"
-                                       implementationClass="com.github.nadlejs.intellij.plugin.NadleStructureViewFactory"/>
+                                       implementationClass="com.github.nadlejs.intellij.plugin.structure.NadleStructureViewFactory"/>
     </extensions>
 </idea-plugin>

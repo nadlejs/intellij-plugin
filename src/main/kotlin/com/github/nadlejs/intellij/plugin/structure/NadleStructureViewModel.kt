@@ -1,5 +1,7 @@
-package com.github.nadlejs.intellij.plugin
+package com.github.nadlejs.intellij.plugin.structure
 
+import com.github.nadlejs.intellij.plugin.util.NadleFileUtil
+import com.github.nadlejs.intellij.plugin.util.NadleIcons
 import com.intellij.ide.structureView.StructureViewTreeElement
 import com.intellij.ide.structureView.TextEditorBasedStructureViewModel
 import com.intellij.ide.util.treeView.smartTree.Sorter

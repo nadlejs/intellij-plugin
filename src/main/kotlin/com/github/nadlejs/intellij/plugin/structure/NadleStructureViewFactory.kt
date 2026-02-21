@@ -1,5 +1,6 @@
-package com.github.nadlejs.intellij.plugin
+package com.github.nadlejs.intellij.plugin.structure
 
+import com.github.nadlejs.intellij.plugin.util.NadleFileUtil
 import com.intellij.ide.structureView.StructureViewBuilder
 import com.intellij.ide.structureView.TreeBasedStructureViewBuilder
 import com.intellij.ide.structureView.StructureViewModel

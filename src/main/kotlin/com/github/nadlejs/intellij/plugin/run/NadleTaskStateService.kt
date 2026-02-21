@@ -1,4 +1,4 @@
-package com.github.nadlejs.intellij.plugin
+package com.github.nadlejs.intellij.plugin.run
 
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.project.Project

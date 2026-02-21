@@ -1,5 +1,6 @@
-package com.github.nadlejs.intellij.plugin
+package com.github.nadlejs.intellij.plugin.run
 
+import com.github.nadlejs.intellij.plugin.util.NadleFileUtil
 import com.intellij.execution.ExecutionListener
 import com.intellij.execution.ExecutionManager
 import com.intellij.execution.process.ProcessHandler
@@ -58,9 +59,6 @@ class NadleTaskExecutionListener : ProjectActivity {
 			VirtualFileManager.VFS_CHANGES,
 			object : BulkFileListener {
 				override fun after(events: List<VFileEvent>) {
-					val project = events.firstOrNull()
-						?.file?.let { return@let project } ?: return
-
 					for (event in events) {
 						if (event !is VFileContentChangeEvent) continue
 						val file = event.file

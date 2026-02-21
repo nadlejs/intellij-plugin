@@ -1,5 +1,6 @@
-package com.github.nadlejs.intellij.plugin
+package com.github.nadlejs.intellij.plugin.structure
 
+import com.github.nadlejs.intellij.plugin.util.NadleIcons
 import com.intellij.ide.structureView.StructureViewTreeElement
 import com.intellij.ide.util.treeView.smartTree.SortableTreeElement
 import com.intellij.navigation.ItemPresentation

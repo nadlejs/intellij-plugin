@@ -1,4 +1,4 @@
-package com.github.nadlejs.intellij.plugin
+package com.github.nadlejs.intellij.plugin.util
 
 import com.intellij.openapi.util.IconLoader
 import javax.swing.Icon

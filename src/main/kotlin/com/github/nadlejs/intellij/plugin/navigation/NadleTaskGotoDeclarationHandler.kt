@@ -1,9 +1,9 @@
-package com.github.nadlejs.intellij.plugin
+package com.github.nadlejs.intellij.plugin.navigation
 
+import com.github.nadlejs.intellij.plugin.util.NadleFileUtil
 import com.intellij.codeInsight.navigation.actions.GotoDeclarationHandler
 import com.intellij.openapi.editor.Editor
 import com.intellij.psi.PsiElement
-import com.intellij.psi.util.PsiTreeUtil
 
 class NadleTaskGotoDeclarationHandler : GotoDeclarationHandler {
 
