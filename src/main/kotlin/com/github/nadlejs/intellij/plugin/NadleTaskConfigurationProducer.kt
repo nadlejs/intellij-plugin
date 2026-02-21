@@ -8,10 +8,6 @@ import com.intellij.psi.PsiElement
 
 class NadleTaskConfigurationProducer : LazyRunConfigurationProducer<NadleTaskRunConfiguration>() {
 
-	companion object {
-		private val TASK_REGISTER_PATTERN = Regex("""tasks\.register\s*\(\s*['"]([^'"]+)['"]""")
-	}
-
 	override fun getConfigurationFactory(): ConfigurationFactory =
 		NadleTaskConfigurationType().configurationFactories[0]
 
@@ -24,16 +20,15 @@ class NadleTaskConfigurationProducer : LazyRunConfigurationProducer<NadleTaskRun
 		val file = element.containingFile ?: return false
 		val virtualFile = file.virtualFile ?: return false
 
-		if (virtualFile.name != "nadle.config.ts") {
+		if (!NadleFileUtil.isNadleConfigFile(virtualFile)) {
 			return false
 		}
 
-		val elementText = element.text ?: return false
-		val matchResult = TASK_REGISTER_PATTERN.find(elementText) ?: return false
-		val taskName = matchResult.groupValues[1]
+		val taskName = findTaskName(element) ?: return false
 
 		configuration.taskName = taskName
-		configuration.name = "Nadle: $taskName"
+		configuration.configFilePath = virtualFile.path
+		configuration.name = taskName
 
 		return true
 	}
@@ -43,10 +38,25 @@ class NadleTaskConfigurationProducer : LazyRunConfigurationProducer<NadleTaskRun
 		context: ConfigurationContext
 	): Boolean {
 		val element = context.psiLocation ?: return false
-		val elementText = element.text ?: return false
-		val matchResult = TASK_REGISTER_PATTERN.find(elementText) ?: return false
-		val taskName = matchResult.groupValues[1]
+		val taskName = findTaskName(element) ?: return false
 
 		return taskName == configuration.taskName
+	}
+
+	private fun findTaskName(element: PsiElement): String? {
+		// Try the element itself first
+		NadleFileUtil.extractTaskName(element.text ?: return null)
+			?.let { return it }
+
+		// Walk up the PSI tree to find enclosing tasks.register() call
+		var current = element.parent
+		var depth = 0
+		while (current != null && depth < 10) {
+			val text = current.text
+			NadleFileUtil.extractTaskName(text)?.let { return it }
+			current = current.parent
+			depth++
+		}
+		return null
 	}
 }

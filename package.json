@@ -1,0 +1,6 @@
+{
+  "private": true,
+  "devDependencies": {
+    "@nadle/language-server": "0.0.2"
+  }
+}
