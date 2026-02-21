@@ -6,7 +6,7 @@ object NadleFileUtil {
 
 	private val NADLE_CONFIG_PATTERN = Regex("""^nadle\.config\.[cm]?[jt]s$""")
 
-	val TASK_REGISTER_PATTERN = Regex("""tasks\.register\s*\(\s*['"]([^'"]+)['"]""")
+	val TASK_REGISTER_PATTERN = Regex("""tasks\s*\.register\s*\(\s*['"]([^'"]+)['"]""")
 
 	fun isNadleConfigFile(file: VirtualFile): Boolean =
 		NADLE_CONFIG_PATTERN.matches(file.name)
