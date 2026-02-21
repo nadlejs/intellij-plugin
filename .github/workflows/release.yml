@@ -31,6 +31,15 @@ jobs:
           distribution: zulu
           java-version: 21
 
+      # Install pnpm and language server dependencies
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
       # Setup Gradle
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v5

@@ -17,11 +17,14 @@
 - [ ] Click the <kbd>Watch</kbd> button on the top of the [IntelliJ Platform Plugin Template][template] to be notified about releases containing new features and fixes.
 
 <!-- Plugin description -->
-This Fancy IntelliJ Platform Plugin is going to be your implementation of the brilliant ideas that you have.
+Integrates [Nadle](https://github.com/nadlejs/nadle) task execution into IntelliJ IDEA.
 
-This specific section is a source for the [plugin.xml](/src/main/resources/META-INF/plugin.xml) file which will be extracted by the [Gradle](/build.gradle.kts) during the build process.
-
-To keep everything working, do not remove `<!-- ... -->` sections. 
+**Features:**
+- Run icons next to `tasks.register("name", fn)` definitions for one-click execution
+- Language intelligence (diagnostics, completions, hover, go-to-definition) for `nadle.config.*` files via the bundled Nadle Language Server
+- Navigate from `dependsOn` references to task definitions
+- Debug support with Node.js inspector
+- Works with `nadle.config.ts`, `nadle.config.js`, and other supported extensions
 <!-- Plugin description end -->
 
 ## Installation
