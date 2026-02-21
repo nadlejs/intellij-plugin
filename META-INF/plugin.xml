@@ -1,0 +1,27 @@
+<!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
+<idea-plugin>
+  <idea-version since-build="242" until-build="252.*" />
+  <change-notes><![CDATA[<h3>Added</h3>
+
+<ul><li>Initial scaffold created from <a href="https://github.com/JetBrains/intellij-platform-plugin-template">IntelliJ Platform Plugin Template</a></li></ul>]]></change-notes>
+  <version>0.0.1</version>
+  <id>com.github.nadlejs.nadle</id>
+  <name>nadle</name>
+  <vendor url="https://github.com/nadlejs">Nadle</vendor>
+  <description><![CDATA[<p>This Fancy IntelliJ Platform Plugin is going to be your implementation of the brilliant ideas that you have.</p>
+
+<p>This specific section is a source for the <a href="/src/main/resources/META-INF/plugin.xml">plugin.xml</a> file which will be extracted by the <a href="/build.gradle.kts">Gradle</a> during the build process.</p>
+
+<p>To keep everything working, do not remove <code>&lt;!-- ... --&gt;</code> sections.</p>]]></description>
+  <depends>com.intellij.modules.platform</depends>
+  <depends>JavaScript</depends>
+  <depends optional="true" config-file="nadle-lsp.xml">com.intellij.modules.lsp</depends>
+  <extensions defaultExtensionNs="com.intellij">
+    <runLineMarkerContributor language="TypeScript" implementationClass="com.github.nadlejs.intellij.plugin.NadleTaskRunLineMarkerContributor" />
+    <runLineMarkerContributor language="JavaScript" implementationClass="com.github.nadlejs.intellij.plugin.NadleTaskRunLineMarkerContributor" />
+    <configurationType implementation="com.github.nadlejs.intellij.plugin.NadleTaskConfigurationType" />
+    <runConfigurationProducer implementation="com.github.nadlejs.intellij.plugin.NadleTaskConfigurationProducer" />
+    <postStartupActivity implementation="com.github.nadlejs.intellij.plugin.NadleTaskExecutionListener" />
+    <gotoDeclarationHandler implementation="com.github.nadlejs.intellij.plugin.NadleTaskGotoDeclarationHandler" />
+  </extensions>
+</idea-plugin>
