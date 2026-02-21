@@ -6,15 +6,28 @@
 
     <description><![CDATA[
         Integrates Nadle task execution into IntelliJ IDEA.<br/>
-        Adds run icons to <code>task.register("name", fn)</code> definitions and enables direct execution.<br/>
-        Works seamlessly with <code>nadle.config.ts</code>.
+        Adds run icons to <code>tasks.register("name", fn)</code> definitions and enables direct execution.<br/>
+        Provides language intelligence (diagnostics, completions, hover, go-to-definition) for <code>nadle.config.*</code> files via the Nadle Language Server.<br/>
+        Works seamlessly with <code>nadle.config.ts</code>, <code>nadle.config.js</code>, and other supported extensions.
     ]]></description>
 
     <depends>com.intellij.modules.platform</depends>
     <depends>JavaScript</depends>
+    <depends optional="true" config-file="nadle-lsp.xml">com.intellij.modules.lsp</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <lineMarkerProvider language="TypeScript"
-                            implementationClass="com.github.nadlejs.intellij.plugin.NadleTaskLineMarkerProvider"/>
+        <runLineMarkerContributor language="TypeScript"
+                                  implementationClass="com.github.nadlejs.intellij.plugin.NadleTaskRunLineMarkerContributor"/>
+        <runLineMarkerContributor language="JavaScript"
+                                  implementationClass="com.github.nadlejs.intellij.plugin.NadleTaskRunLineMarkerContributor"/>
+
+        <configurationType
+                implementation="com.github.nadlejs.intellij.plugin.NadleTaskConfigurationType"/>
+
+        <runConfigurationProducer
+                implementation="com.github.nadlejs.intellij.plugin.NadleTaskConfigurationProducer"/>
+
+        <postStartupActivity
+                implementation="com.github.nadlejs.intellij.plugin.NadleTaskExecutionListener"/>
     </extensions>
 </idea-plugin>

@@ -8,10 +8,6 @@ import com.intellij.psi.PsiElement
 
 class NadleTaskConfigurationProducer : LazyRunConfigurationProducer<NadleTaskRunConfiguration>() {
 
-	companion object {
-		private val TASK_REGISTER_PATTERN = Regex("""tasks\.register\s*\(\s*['"]([^'"]+)['"]""")
-	}
-
 	override fun getConfigurationFactory(): ConfigurationFactory =
 		NadleTaskConfigurationType().configurationFactories[0]
 
@@ -24,15 +20,15 @@ class NadleTaskConfigurationProducer : LazyRunConfigurationProducer<NadleTaskRun
 		val file = element.containingFile ?: return false
 		val virtualFile = file.virtualFile ?: return false
 
-		if (virtualFile.name != "nadle.config.ts") {
+		if (!NadleFileUtil.isNadleConfigFile(virtualFile)) {
 			return false
 		}
 
 		val elementText = element.text ?: return false
-		val matchResult = TASK_REGISTER_PATTERN.find(elementText) ?: return false
-		val taskName = matchResult.groupValues[1]
+		val taskName = NadleFileUtil.extractTaskName(elementText) ?: return false
 
 		configuration.taskName = taskName
+		configuration.configFilePath = virtualFile.path
 		configuration.name = "Nadle: $taskName"
 
 		return true
@@ -44,8 +40,7 @@ class NadleTaskConfigurationProducer : LazyRunConfigurationProducer<NadleTaskRun
 	): Boolean {
 		val element = context.psiLocation ?: return false
 		val elementText = element.text ?: return false
-		val matchResult = TASK_REGISTER_PATTERN.find(elementText) ?: return false
-		val taskName = matchResult.groupValues[1]
+		val taskName = NadleFileUtil.extractTaskName(elementText) ?: return false
 
 		return taskName == configuration.taskName
 	}

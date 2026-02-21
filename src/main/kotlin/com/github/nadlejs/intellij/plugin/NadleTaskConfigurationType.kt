@@ -13,7 +13,7 @@ class NadleTaskConfigurationType : ConfigurationType {
 
 	override fun getConfigurationTypeDescription(): String = "Nadle task runner configuration"
 
-	override fun getIcon(): Icon = AllIcons.Nodes.Console
+	override fun getIcon(): Icon = AllIcons.RunConfigurations.TestState.Run
 
 	override fun getId(): String = "NADLE_TASK_CONFIGURATION"
 
