@@ -11,8 +11,11 @@ import com.intellij.execution.process.KillableColoredProcessHandler
 import com.intellij.execution.process.ProcessHandler
 import com.intellij.execution.runners.ExecutionEnvironment
 import com.intellij.execution.runners.ProgramRunner
+import com.intellij.execution.configuration.EnvironmentVariablesData
+import com.intellij.javascript.nodejs.interpreter.NodeJsInterpreterRef
 import com.intellij.openapi.options.SettingsEditor
 import com.intellij.openapi.project.Project
+import com.intellij.util.execution.ParametersListUtil
 import org.jdom.Element
 import java.io.File
 import java.nio.file.Files
@@ -26,9 +29,13 @@ class NadleTaskRunConfiguration(
 
 	var taskName: String = ""
 	var configFilePath: String = ""
+	var interpreterRef: NodeJsInterpreterRef = NodeJsInterpreterRef.createProjectRef()
+	var workingDirectory: String = ""
+	var nadleArguments: String = ""
+	var envData: EnvironmentVariablesData = EnvironmentVariablesData.DEFAULT
 
 	override fun getConfigurationEditor(): SettingsEditor<out RunConfiguration> =
-		NadleTaskSettingsEditor()
+		NadleTaskSettingsEditor(project)
 
 	@Throws(RuntimeConfigurationException::class)
 	override fun checkConfiguration() {
@@ -36,21 +43,11 @@ class NadleTaskRunConfiguration(
 			throw RuntimeConfigurationError("Task name must be specified")
 		}
 
-		if (!isCommandAvailable("node")) {
+		if (NodeJsResolver.resolve(project, interpreterRef) == null) {
 			throw RuntimeConfigurationWarning(
-				"Node.js not found in PATH. Task execution requires Node.js."
+				"Node.js not found. Configure it in Settings > Languages & Frameworks > Node.js, " +
+					"or ensure it is available in PATH."
 			)
-		}
-	}
-
-	private fun isCommandAvailable(command: String): Boolean {
-		return try {
-			val process = ProcessBuilder(command, "--version")
-				.redirectErrorStream(true)
-				.start()
-			process.waitFor() == 0
-		} catch (e: Exception) {
-			false
 		}
 	}
 
@@ -68,12 +65,25 @@ class NadleTaskRunConfiguration(
 		super.writeExternal(element)
 		element.setAttribute("taskName", taskName)
 		element.setAttribute("configFilePath", configFilePath)
+		element.setAttribute("workingDirectory", workingDirectory)
+		element.setAttribute("nadleArguments", nadleArguments)
+		element.setAttribute("nodeInterpreter", interpreterRef.referenceName)
+		envData.writeExternal(element)
 	}
 
 	override fun readExternal(element: Element) {
 		super.readExternal(element)
 		taskName = element.getAttributeValue("taskName") ?: ""
 		configFilePath = element.getAttributeValue("configFilePath") ?: ""
+		workingDirectory = element.getAttributeValue("workingDirectory") ?: ""
+		nadleArguments = element.getAttributeValue("nadleArguments") ?: ""
+		val refName = element.getAttributeValue("nodeInterpreter")
+		interpreterRef = if (refName != null) {
+			NodeJsInterpreterRef.create(refName)
+		} else {
+			NodeJsInterpreterRef.createProjectRef()
+		}
+		envData = EnvironmentVariablesData.readExternal(element)
 	}
 
 	private class NadleTaskRunProfileState(
@@ -101,11 +111,31 @@ class NadleTaskRunConfiguration(
 			val projectBasePath = environment.project.basePath
 				?: throw ExecutionException("Project base path not found")
 
+			val effectiveWorkDir = configuration.workingDirectory
+				.ifBlank { projectBasePath }
+
+			val nodePath = NodeJsResolver.resolve(
+				environment.project,
+				configuration.interpreterRef
+			) ?: throw ExecutionException(
+				"Node.js not found. Configure it in " +
+					"Settings > Languages & Frameworks > Node.js."
+			)
+
 			val commandLine = if (isDebug) {
-				buildDebugCommandLine(projectBasePath)
+				buildDebugCommandLine(projectBasePath, nodePath)
 			} else {
-				buildRunCommandLine(projectBasePath)
+				buildRunCommandLine(projectBasePath, nodePath)
 			}
+
+			commandLine.workDirectory = File(effectiveWorkDir)
+
+			val extraArgs = ParametersListUtil.parse(
+				configuration.nadleArguments
+			)
+			commandLine.addParameters(extraArgs)
+
+			configuration.envData.configureCommandLine(commandLine, true)
 
 			return try {
 				KillableColoredProcessHandler(commandLine)
@@ -117,29 +147,32 @@ class NadleTaskRunConfiguration(
 		}
 
 		private fun buildRunCommandLine(
-			projectBasePath: String
+			projectBasePath: String,
+			nodePath: String
 		): GeneralCommandLine {
+			val npxPath = Path.of(nodePath).parent?.resolve("npx")?.toString()
+				?: "npx"
+
 			return GeneralCommandLine().apply {
-				exePath = "npx"
+				exePath = npxPath
 				addParameter("nadle")
 				addParameter(configuration.taskName)
 				addParameter("--no-footer")
-				workDirectory = File(projectBasePath)
 			}
 		}
 
 		private fun buildDebugCommandLine(
-			projectBasePath: String
+			projectBasePath: String,
+			nodePath: String
 		): GeneralCommandLine {
 			val nadleBin = resolveNadleBinary(projectBasePath)
 
 			return GeneralCommandLine().apply {
-				exePath = "node"
+				exePath = nodePath
 				addParameter("--inspect-brk")
 				addParameter(nadleBin)
 				addParameter(configuration.taskName)
 				addParameter("--no-footer")
-				workDirectory = File(projectBasePath)
 			}
 		}
 

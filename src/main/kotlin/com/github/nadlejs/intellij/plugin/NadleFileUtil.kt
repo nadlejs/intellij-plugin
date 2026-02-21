@@ -13,4 +13,7 @@ object NadleFileUtil {
 
 	fun extractTaskName(text: String): String? =
 		TASK_REGISTER_PATTERN.find(text)?.groupValues?.get(1)
+
+	fun extractAllTaskNames(text: String): List<String> =
+		TASK_REGISTER_PATTERN.findAll(text).map { it.groupValues[1] }.toList()
 }

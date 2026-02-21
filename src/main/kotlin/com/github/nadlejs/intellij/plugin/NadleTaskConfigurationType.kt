@@ -8,7 +8,7 @@ import javax.swing.Icon
 
 class NadleTaskConfigurationType : ConfigurationType {
 
-	override fun getDisplayName(): String = "Nadle Task"
+	override fun getDisplayName(): String = "Nadle"
 
 	override fun getConfigurationTypeDescription(): String = "Nadle task runner configuration"
 
@@ -22,7 +22,7 @@ class NadleTaskConfigurationType : ConfigurationType {
 	private class NadleTaskConfigurationFactory(type: ConfigurationType) : ConfigurationFactory(type) {
 
 		override fun createTemplateConfiguration(project: Project): RunConfiguration =
-			NadleTaskRunConfiguration(project, this, "Nadle Task")
+			NadleTaskRunConfiguration(project, this, "Nadle")
 
 		override fun getId(): String = "NADLE_TASK_FACTORY"
 	}

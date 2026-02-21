@@ -16,12 +16,12 @@ class NadleLspServerDescriptor(
 		NadleFileUtil.isNadleConfigFile(file)
 
 	override fun createCommandLine(): GeneralCommandLine {
-		if (!isNodeAvailable()) {
-			throw IllegalStateException(
+		val nodePath = NodeJsResolver.resolve(project)
+			?: throw IllegalStateException(
 				"Node.js is required for Nadle language intelligence features. " +
-					"Please install Node.js and ensure it is available in PATH."
+					"Please configure Node.js in Settings > Languages & Frameworks > Node.js, " +
+					"or ensure it is available in PATH."
 			)
-		}
 
 		val serverPath = resolveServerPath()
 			?: throw IllegalStateException(
@@ -30,20 +30,7 @@ class NadleLspServerDescriptor(
 					"or globally."
 			)
 
-		return GeneralCommandLine("node", serverPath)
-	}
-
-	private fun isNodeAvailable(): Boolean {
-		return try {
-			val process = ProcessBuilder("node", "--version")
-				.redirectErrorStream(true)
-				.start()
-			val exitCode = process.waitFor()
-			exitCode == 0
-		} catch (e: Exception) {
-			LOG.warn("Node.js not found in PATH", e)
-			false
-		}
+		return GeneralCommandLine(nodePath, serverPath)
 	}
 
 	private fun resolveServerPath(): String? {
