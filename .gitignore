@@ -5,4 +5,3 @@
 build
 .kotlin
 node_modules
-pnpm-lock.yaml
