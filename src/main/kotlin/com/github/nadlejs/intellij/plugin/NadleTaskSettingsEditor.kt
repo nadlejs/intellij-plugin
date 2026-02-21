@@ -1,6 +1,7 @@
 package com.github.nadlejs.intellij.plugin
 
-import com.intellij.codeInsight.AutoPopupController
+import com.intellij.codeInsight.completion.CodeCompletionHandlerBase
+import com.intellij.codeInsight.completion.CompletionType
 import com.intellij.execution.configuration.EnvironmentVariablesTextFieldWithBrowseButton
 import com.intellij.javascript.nodejs.interpreter.NodeJsInterpreterField
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory
@@ -15,7 +16,6 @@ import java.awt.event.FocusEvent
 import java.nio.file.Path
 import javax.swing.JComponent
 import javax.swing.JTextField
-import javax.swing.SwingUtilities
 import javax.swing.Timer
 import javax.swing.event.DocumentEvent
 import javax.swing.event.DocumentListener
@@ -27,7 +27,7 @@ class NadleTaskSettingsEditor(
 	private val completionProvider = NadleTaskCompletionProvider()
 	private val interpreterField = NodeJsInterpreterField(project, false)
 	private val taskNameField = TextFieldWithAutoCompletion(
-		project, completionProvider, false, ""
+		project, completionProvider, true, ""
 	)
 	private val workingDirectoryField = TextFieldWithBrowseButton().apply {
 		addBrowseFolderListener(
@@ -48,9 +48,15 @@ class NadleTaskSettingsEditor(
 		taskNameField.addSettingsProvider { editor ->
 			editor.contentComponent.addFocusListener(object : FocusAdapter() {
 				override fun focusGained(e: FocusEvent?) {
-					SwingUtilities.invokeLater {
-						AutoPopupController.getInstance(project)
-							.scheduleAutoPopup(editor)
+					refreshTasks()
+					Timer(200) {
+						if (!editor.isDisposed) {
+							CodeCompletionHandlerBase(CompletionType.BASIC)
+								.invokeCompletion(project, editor)
+						}
+					}.apply {
+						isRepeats = false
+						start()
 					}
 				}
 			})

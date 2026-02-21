@@ -29,6 +29,7 @@ class NadleTaskConfigurationProducer : LazyRunConfigurationProducer<NadleTaskRun
 		configuration.taskName = taskName
 		configuration.configFilePath = virtualFile.path
 		configuration.name = taskName
+		configuration.workingDirectory = virtualFile.parent?.path ?: ""
 
 		return true
 	}
@@ -44,19 +45,26 @@ class NadleTaskConfigurationProducer : LazyRunConfigurationProducer<NadleTaskRun
 	}
 
 	private fun findTaskName(element: PsiElement): String? {
-		// Try the element itself first
-		NadleFileUtil.extractTaskName(element.text ?: return null)
-			?.let { return it }
+		val elementText = element.text ?: return null
 
-		// Walk up the PSI tree to find enclosing tasks.register() call
+		// Try the element itself first
+		NadleFileUtil.extractTaskName(elementText)?.let { return it }
+
+		// Walk up the PSI tree to find the nearest enclosing
+		// tasks.register() call. Only accept nodes that contain exactly
+		// one match — if a parent has multiple registrations, we've
+		// walked too far.
 		var current = element.parent
 		var depth = 0
 		while (current != null && depth < 10) {
 			val text = current.text
-			NadleFileUtil.extractTaskName(text)?.let { return it }
+			val allNames = NadleFileUtil.extractAllTaskNames(text)
+			if (allNames.size == 1) return allNames[0]
+			if (allNames.size > 1) break
 			current = current.parent
 			depth++
 		}
+
 		return null
 	}
 }
