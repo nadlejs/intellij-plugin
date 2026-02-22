@@ -1,5 +1,7 @@
-package com.github.nadlejs.intellij.plugin
+package com.github.nadlejs.intellij.plugin.lsp
 
+import com.github.nadlejs.intellij.plugin.util.NadleFileUtil
+import com.github.nadlejs.intellij.plugin.util.NodeJsResolver
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project

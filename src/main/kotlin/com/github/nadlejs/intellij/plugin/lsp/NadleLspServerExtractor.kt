@@ -1,4 +1,4 @@
-package com.github.nadlejs.intellij.plugin
+package com.github.nadlejs.intellij.plugin.lsp
 
 import com.intellij.openapi.application.PathManager
 import com.intellij.openapi.diagnostic.Logger

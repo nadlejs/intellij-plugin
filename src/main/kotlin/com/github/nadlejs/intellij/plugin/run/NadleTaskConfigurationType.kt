@@ -1,5 +1,6 @@
-package com.github.nadlejs.intellij.plugin
+package com.github.nadlejs.intellij.plugin.run
 
+import com.github.nadlejs.intellij.plugin.util.NadleIcons
 import com.intellij.execution.configurations.ConfigurationFactory
 import com.intellij.execution.configurations.ConfigurationType
 import com.intellij.execution.configurations.RunConfiguration

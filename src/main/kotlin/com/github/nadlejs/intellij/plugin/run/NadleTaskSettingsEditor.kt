@@ -1,4 +1,4 @@
-package com.github.nadlejs.intellij.plugin
+package com.github.nadlejs.intellij.plugin.run
 
 import com.intellij.codeInsight.completion.CodeCompletionHandlerBase
 import com.intellij.codeInsight.completion.CompletionType

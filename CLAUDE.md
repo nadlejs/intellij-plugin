@@ -1,31 +1,38 @@
-# intellij-plugin Development Guidelines
+# Nadle IntelliJ Plugin
 
-Auto-generated from all feature plans. Last updated: 2026-02-21
-
-## Active Technologies
-- Kotlin 2.1.20, JVM 21 + IntelliJ Platform SDK 2024.2.5, JavaScript plugin (001-file-structure-tasks)
-
-- Kotlin 2.1.20, JVM 21 + IntelliJ Platform SDK 2024.2.5, IntelliJ Platform Gradle Plugin 2.5.0, JavaScript plugin (001-intellij-lsp-integration)
+## Tech Stack
+- Kotlin 2.1.20, JVM 21
+- IntelliJ Platform SDK 2024.2.5
+- IntelliJ Platform Gradle Plugin 2.5.0
+- JavaScript plugin dependency
 
 ## Project Structure
 
 ```text
-src/
-tests/
+src/main/kotlin/com/github/nadlejs/intellij/plugin/
+  run/          # Run configurations, execution, gutter markers
+  lsp/          # Language Server Protocol integration
+  structure/    # File Structure popup (Cmd+F12)
+  util/         # Shared utilities (file detection, icons, Node.js resolver)
+src/main/resources/
+  META-INF/plugin.xml    # Extension point registrations
+  messages/MyBundle.properties
+  icons/nadle.svg
 ```
 
 ## Commands
 
-# Add commands for Kotlin 2.1.20, JVM 21
+```bash
+./gradlew compileKotlin   # Check compilation
+./gradlew build           # Full build
+./gradlew runIde          # Launch sandboxed IDE
+```
 
-## Code Style
-
-Kotlin 2.1.20, JVM 21: Follow standard conventions
-
-## Recent Changes
-- 001-file-structure-tasks: Added Kotlin 2.1.20, JVM 21 + IntelliJ Platform SDK 2024.2.5, JavaScript plugin
-
-- 001-intellij-lsp-integration: Added Kotlin 2.1.20, JVM 21 + IntelliJ Platform SDK 2024.2.5, IntelliJ Platform Gradle Plugin 2.5.0, JavaScript plugin
+## Key Patterns
+- `NadleFileUtil.isNadleConfigFile()` guards all extension points to nadle config files only
+- `NadleFileUtil.TASK_REGISTER_PATTERN` regex extracts task names from `tasks.register()` calls
+- `NodeJsResolver` resolves Node.js binary across macOS GUI, shell PATH, and well-known paths
+- Run configurations use `npx nadle <taskName>` for execution, direct node for debug
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->
