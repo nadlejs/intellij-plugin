@@ -18,10 +18,13 @@ object NadleTaskScanner {
 
 	private val CONFIG_PATTERN = Regex("""^nadle\.config\.[cm]?[jt]s$""")
 
-	fun scanTasks(rootDir: Path): List<String> {
+	fun scanTasks(rootDir: Path): List<String> =
+		scanTasksDetailed(rootDir).map { it.name }.sorted()
+
+	fun scanTasksDetailed(rootDir: Path): List<NadleTask> {
 		if (!Files.isDirectory(rootDir)) return emptyList()
 
-		val tasks = mutableListOf<String>()
+		val tasks = mutableListOf<NadleTask>()
 
 		Files.walkFileTree(rootDir, object : SimpleFileVisitor<Path>() {
 			override fun preVisitDirectory(
@@ -49,13 +52,20 @@ object NadleTaskScanner {
 					val relDir = rootDir.relativize(file.parent)
 
 					for (name in names) {
-						if (relDir.toString().isEmpty()) {
-							tasks.add(name)
+						val qualifiedName = if (relDir.toString().isEmpty()) {
+							name
 						} else {
 							val prefix = relDir.toString()
 								.replace(File.separatorChar, ':')
-							tasks.add(":$prefix:$name")
+							":$prefix:$name"
 						}
+						tasks.add(
+							NadleTask(
+								name = qualifiedName,
+								configFilePath = file.toAbsolutePath(),
+								workingDirectory = file.parent.toAbsolutePath()
+							)
+						)
 					}
 				}
 				return FileVisitResult.CONTINUE
@@ -67,6 +77,6 @@ object NadleTaskScanner {
 			): FileVisitResult = FileVisitResult.CONTINUE
 		})
 
-		return tasks.sorted()
+		return tasks
 	}
 }

@@ -41,5 +41,8 @@
         <lang.psiStructureViewFactory language="TypeScript"
                                        order="first"
                                        implementationClass="com.github.nadlejs.intellij.plugin.structure.NadleStructureViewFactory"/>
+
+        <searchEverywhereContributor
+                implementation="com.github.nadlejs.intellij.plugin.search.NadleTaskSearchEverywhereContributorFactory"/>
     </extensions>
 </idea-plugin>
