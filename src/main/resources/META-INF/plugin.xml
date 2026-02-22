@@ -35,6 +35,9 @@
         <platform.lsp.serverSupportProvider
                 implementation="com.github.nadlejs.intellij.plugin.lsp.NadleLspServerSupportProvider"/>
 
+        <iconProvider
+                implementation="com.github.nadlejs.intellij.plugin.util.NadleIconProvider"/>
+
         <lang.psiStructureViewFactory language="JavaScript"
                                        order="first"
                                        implementationClass="com.github.nadlejs.intellij.plugin.structure.NadleStructureViewFactory"/>
