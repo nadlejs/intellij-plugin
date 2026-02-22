@@ -1,6 +1,6 @@
 {
   "private": true,
   "devDependencies": {
-    "@nadle/language-server": "0.0.2"
+    "@nadle/language-server": "https://pkg.pr.new/nadlejs/nadle/@nadle/language-server@bd64301"
   }
 }

@@ -9,13 +9,14 @@ importers:
   .:
     devDependencies:
       '@nadle/language-server':
-        specifier: 0.0.2
-        version: 0.0.2
+        specifier: https://pkg.pr.new/nadlejs/nadle/@nadle/language-server@bd64301
+        version: https://pkg.pr.new/nadlejs/nadle/@nadle/language-server@bd64301
 
 packages:
 
-  '@nadle/language-server@0.0.2':
-    resolution: {integrity: sha512-DoWankFcSNlQS0vhjfeSliOi2ow3k5k6l88gz/ayMgK5avIbyYqyRKCGybEw+dd/m88ZTIPsyVdRSvtd/d01QA==}
+  '@nadle/language-server@https://pkg.pr.new/nadlejs/nadle/@nadle/language-server@bd64301':
+    resolution: {integrity: sha512-RUuWRtX7TcW7jPNIxRj+IIuaaBn/SibrrozzmiH4kaN2KXg5VLrH0vK78++Bc3Q4f4SqP0mBOXl5mglL3VYbng==, tarball: https://pkg.pr.new/nadlejs/nadle/@nadle/language-server@bd64301}
+    version: 0.0.3
     engines: {node: '>=22'}
     hasBin: true
 
@@ -43,7 +44,7 @@ packages:
 
 snapshots:
 
-  '@nadle/language-server@0.0.2':
+  '@nadle/language-server@https://pkg.pr.new/nadlejs/nadle/@nadle/language-server@bd64301':
     dependencies:
       typescript: 5.9.3
       vscode-languageserver: 9.0.1

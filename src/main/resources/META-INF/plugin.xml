@@ -7,7 +7,7 @@
     <description><![CDATA[
         Integrates Nadle task execution into IntelliJ IDEA.<br/>
         Adds run icons to <code>tasks.register("name", fn)</code> definitions and enables direct execution.<br/>
-        Provides language intelligence (diagnostics, completions, hover, go-to-definition) for <code>nadle.config.*</code> files via the Nadle Language Server.<br/>
+        Provides language intelligence (diagnostics, completions, hover, go-to-definition, find usages) for <code>nadle.config.*</code> files via the Nadle Language Server.<br/>
         Works seamlessly with <code>nadle.config.ts</code>, <code>nadle.config.js</code>, and other supported extensions.
     ]]></description>
 
@@ -28,9 +28,6 @@
 
         <postStartupActivity
                 implementation="com.github.nadlejs.intellij.plugin.run.NadleTaskExecutionListener"/>
-
-        <gotoDeclarationHandler
-                implementation="com.github.nadlejs.intellij.plugin.navigation.NadleTaskGotoDeclarationHandler"/>
 
         <platform.lsp.serverSupportProvider
                 implementation="com.github.nadlejs.intellij.plugin.lsp.NadleLspServerSupportProvider"/>
