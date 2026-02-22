@@ -47,5 +47,10 @@
 
         <searchEverywhereContributor
                 implementation="com.github.nadlejs.intellij.plugin.search.NadleTaskSearchEverywhereContributorFactory"/>
+
+        <toolWindow id="Nadle"
+                    anchor="right"
+                    icon="/icons/nadle.svg"
+                    factoryClass="com.github.nadlejs.intellij.plugin.toolwindow.NadleToolWindowFactory"/>
     </extensions>
 </idea-plugin>

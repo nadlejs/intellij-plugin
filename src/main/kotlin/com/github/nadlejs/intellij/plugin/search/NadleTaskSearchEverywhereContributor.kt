@@ -1,14 +1,9 @@
 package com.github.nadlejs.intellij.plugin.search
 
 import com.github.nadlejs.intellij.plugin.run.NadleTask
-import com.github.nadlejs.intellij.plugin.run.NadleTaskConfigurationType
-import com.github.nadlejs.intellij.plugin.run.NadleTaskRunConfiguration
+import com.github.nadlejs.intellij.plugin.run.NadleTaskRunner
 import com.github.nadlejs.intellij.plugin.run.NadleTaskScanner
 import com.github.nadlejs.intellij.plugin.util.NadleIcons
-import com.intellij.execution.runners.ExecutionUtil
-import com.intellij.execution.RunManager
-import com.intellij.execution.configurations.ConfigurationTypeUtil
-import com.intellij.execution.executors.DefaultRunExecutor
 import com.intellij.ide.actions.searcheverywhere.FoundItemDescriptor
 import com.intellij.ide.actions.searcheverywhere.WeightedSearchEverywhereContributor
 import com.intellij.openapi.actionSystem.AnActionEvent
@@ -88,33 +83,7 @@ class NadleTaskSearchEverywhereContributor(
 		modifiers: Int,
 		searchText: String
 	): Boolean {
-		val runManager = RunManager.getInstance(project)
-		val configType = ConfigurationTypeUtil.findConfigurationType(
-			NadleTaskConfigurationType::class.java
-		)
-		val factory = configType.configurationFactories[0]
-
-		val existing = runManager.allSettings.find { settings ->
-			val config = settings.configuration
-			config is NadleTaskRunConfiguration
-				&& config.taskName == selected.name
-				&& config.configFilePath == selected.configFilePath.toString()
-		}
-
-		val settings = existing ?: runManager.createConfiguration(
-			selected.name,
-			factory
-		).also { settings ->
-			val config = settings.configuration as NadleTaskRunConfiguration
-			config.taskName = selected.name
-			config.configFilePath = selected.configFilePath.toString()
-			config.workingDirectory = selected.workingDirectory.toString()
-			settings.isTemporary = true
-			runManager.addConfiguration(settings)
-		}
-
-		runManager.selectedConfiguration = settings
-		ExecutionUtil.runConfiguration(settings, DefaultRunExecutor.getRunExecutorInstance())
+		NadleTaskRunner.run(project, selected)
 		return true
 	}
 
