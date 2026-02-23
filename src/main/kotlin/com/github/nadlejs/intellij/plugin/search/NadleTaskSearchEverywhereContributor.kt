@@ -4,12 +4,9 @@ import com.github.nadlejs.intellij.plugin.run.NadleTask
 import com.github.nadlejs.intellij.plugin.run.NadleTaskRunner
 import com.github.nadlejs.intellij.plugin.run.NadleTaskScanner
 import com.github.nadlejs.intellij.plugin.util.NadleIcons
-import com.intellij.ide.actions.searcheverywhere.FoundItemDescriptor
-import com.intellij.ide.actions.searcheverywhere.WeightedSearchEverywhereContributor
-import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.ide.actions.searcheverywhere.SearchEverywhereContributor
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.project.Project
-import com.intellij.psi.codeStyle.MinusculeMatcher
 import com.intellij.psi.codeStyle.NameUtil
 import com.intellij.util.Processor
 import java.awt.Component
@@ -20,7 +17,7 @@ import javax.swing.ListCellRenderer
 
 class NadleTaskSearchEverywhereContributor(
 	private val project: Project
-) : WeightedSearchEverywhereContributor<NadleTask> {
+) : SearchEverywhereContributor<NadleTask> {
 
 	override fun getSearchProviderId(): String = javaClass.name
 
@@ -55,29 +52,6 @@ class NadleTaskSearchEverywhereContributor(
 
 	override fun getDataForItem(element: NadleTask, dataId: String): Any? = null
 
-	override fun fetchWeightedElements(
-		pattern: String,
-		progressIndicator: ProgressIndicator,
-		consumer: Processor<in FoundItemDescriptor<NadleTask>>
-	) {
-		val basePath = project.basePath ?: return
-		val tasks = NadleTaskScanner.scanTasksDetailed(Path.of(basePath))
-
-		val matcher = if (pattern.isNotEmpty()) {
-			NameUtil.buildMatcher("*$pattern").build()
-		} else {
-			null
-		}
-
-		for (task in tasks) {
-			progressIndicator.checkCanceled()
-			if (matcher == null || matcher.matches(task.name)) {
-				val weight = matcher?.matchingDegree(task.name) ?: 0
-				consumer.process(FoundItemDescriptor(task, weight))
-			}
-		}
-	}
-
 	override fun processSelectedItem(
 		selected: NadleTask,
 		modifiers: Int,
@@ -92,8 +66,20 @@ class NadleTaskSearchEverywhereContributor(
 		progressIndicator: ProgressIndicator,
 		consumer: Processor<in NadleTask>
 	) {
-		fetchWeightedElements(pattern, progressIndicator) { descriptor ->
-			consumer.process(descriptor.item)
+		val basePath = project.basePath ?: return
+		val tasks = NadleTaskScanner.scanTasksDetailed(Path.of(basePath))
+
+		val matcher = if (pattern.isNotEmpty()) {
+			NameUtil.buildMatcher("*$pattern").build()
+		} else {
+			null
+		}
+
+		for (task in tasks) {
+			progressIndicator.checkCanceled()
+			if (matcher == null || matcher.matches(task.name)) {
+				consumer.process(task)
+			}
 		}
 	}
 }
