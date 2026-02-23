@@ -166,7 +166,6 @@ class NadleTaskRunConfiguration(
 				exePath = npxPath
 				addParameter("nadle")
 				addParameter(configuration.taskName)
-				addParameter("--no-footer")
 			}
 		}
 
@@ -181,7 +180,6 @@ class NadleTaskRunConfiguration(
 				addParameter("--inspect-brk")
 				addParameter(nadleBin)
 				addParameter(configuration.taskName)
-				addParameter("--no-footer")
 			}
 		}
 
