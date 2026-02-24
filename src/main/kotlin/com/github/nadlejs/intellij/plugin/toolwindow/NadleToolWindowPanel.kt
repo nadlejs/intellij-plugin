@@ -4,8 +4,10 @@ import com.github.nadlejs.intellij.plugin.run.NadleTask
 import com.github.nadlejs.intellij.plugin.run.NadleTaskRunner
 import com.github.nadlejs.intellij.plugin.run.NadleTaskScanner
 import com.github.nadlejs.intellij.plugin.run.NadleTaskStateService
+import com.github.nadlejs.intellij.plugin.service.NadleProjectService
 import com.github.nadlejs.intellij.plugin.util.NadleFileUtil
 import com.github.nadlejs.intellij.plugin.util.NadleIcons
+import com.github.nadlejs.intellij.plugin.util.NadleKernel
 import com.intellij.execution.ExecutionListener
 import com.intellij.execution.ExecutionManager
 import com.intellij.execution.process.ProcessHandler
@@ -71,13 +73,53 @@ class NadleToolWindowPanel(
 	fun loadTasks() {
 		ApplicationManager.getApplication().executeOnPooledThread {
 			val basePath = project.basePath ?: return@executeOnPooledThread
-			val tasks = NadleTaskScanner.scanTasksDetailed(Path.of(basePath))
+			val tasks = loadTasksFromProjectService()
+				?: NadleTaskScanner.scanTasksDetailed(Path.of(basePath))
 
 			ApplicationManager.getApplication().invokeLater {
 				if (project.isDisposed) return@invokeLater
 				rebuildTree(tasks)
 			}
 		}
+	}
+
+	private fun loadTasksFromProjectService(): List<NadleTask>? {
+		val projectInfo = NadleProjectService.getInstance(project).getProjectInfo()
+			?: return null
+
+		val tasks = mutableListOf<NadleTask>()
+		val allWorkspaces = listOf(projectInfo.rootWorkspace) + projectInfo.workspaces
+
+		for (workspace in allWorkspaces) {
+			val configPath = workspace.configFilePath ?: continue
+			val configFile = Path.of(configPath)
+			if (!java.nio.file.Files.exists(configFile)) continue
+
+			val text = try {
+				java.nio.file.Files.readString(configFile)
+			} catch (_: java.io.IOException) {
+				continue
+			}
+
+			val taskNames = NadleFileUtil.extractAllTaskNames(text)
+			val isRoot = NadleKernel.isRootWorkspaceId(workspace.id)
+
+			for (name in taskNames) {
+				val qualifiedName = NadleKernel.composeTaskIdentifier(
+					if (isRoot) "" else workspace.id,
+					name
+				)
+				tasks.add(
+					NadleTask(
+						name = qualifiedName,
+						configFilePath = configFile.toAbsolutePath(),
+						workingDirectory = configFile.parent.toAbsolutePath()
+					)
+				)
+			}
+		}
+
+		return tasks
 	}
 
 	override fun dispose() {}
@@ -87,7 +129,7 @@ class NadleToolWindowPanel(
 			val node = path.lastPathComponent as? DefaultMutableTreeNode
 				?: return@installOn ""
 			when (val userObject = node.userObject) {
-				is NadleTask -> userObject.name.substringAfterLast(':')
+				is NadleTask -> NadleKernel.parseTaskReference(userObject.name).taskName
 				is String -> userObject
 				else -> ""
 			}
@@ -102,14 +144,15 @@ class NadleToolWindowPanel(
 
 		for ((configPath, fileTasks) in grouped.entries.sortedBy { it.key.toString() }) {
 			val relativeDir = Path.of(basePath).relativize(configPath.parent).toString()
-			val isRoot = relativeDir == "" || relativeDir == "."
+			val workspaceId = NadleKernel.deriveWorkspaceId(relativeDir.ifEmpty { "." })
+			val isRoot = NadleKernel.isRootWorkspaceId(workspaceId)
 
 			if (isRoot) {
 				for (task in fileTasks.sortedBy { it.name }) {
 					rootNode.add(DefaultMutableTreeNode(task))
 				}
 			} else {
-				val label = relativeDir.replace('/', ':').replace('\\', ':')
+				val label = workspaceId
 				val configNode = DefaultMutableTreeNode(label)
 				for (task in fileTasks.sortedBy { it.name }) {
 					configNode.add(DefaultMutableTreeNode(task))
@@ -194,13 +237,9 @@ class NadleToolWindowPanel(
 							is VFileContentChangeEvent ->
 								NadleFileUtil.isNadleConfigFile(event.file)
 							is VFileCreateEvent ->
-								event.childName.matches(
-									Regex("""^nadle\.config\.[cm]?[jt]s$""")
-								)
+								NadleFileUtil.isNadleConfigFileName(event.childName)
 							is VFileDeleteEvent ->
-								event.file.name.matches(
-									Regex("""^nadle\.config\.[cm]?[jt]s$""")
-								)
+								NadleFileUtil.isNadleConfigFileName(event.file.name)
 							else -> false
 						}
 					}
@@ -267,7 +306,7 @@ class NadleToolWindowPanel(
 							AllIcons.RunConfigurations.TestFailed
 						null -> NadleIcons.Nadle
 					}
-					val displayName = userObject.name.substringAfterLast(':')
+					val displayName = NadleKernel.parseTaskReference(userObject.name).taskName
 					append(displayName)
 				}
 			}

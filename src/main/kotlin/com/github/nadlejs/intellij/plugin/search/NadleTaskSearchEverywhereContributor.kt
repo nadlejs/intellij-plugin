@@ -3,7 +3,10 @@ package com.github.nadlejs.intellij.plugin.search
 import com.github.nadlejs.intellij.plugin.run.NadleTask
 import com.github.nadlejs.intellij.plugin.run.NadleTaskRunner
 import com.github.nadlejs.intellij.plugin.run.NadleTaskScanner
+import com.github.nadlejs.intellij.plugin.service.NadleProjectService
+import com.github.nadlejs.intellij.plugin.util.NadleFileUtil
 import com.github.nadlejs.intellij.plugin.util.NadleIcons
+import com.github.nadlejs.intellij.plugin.util.NadleKernel
 import com.intellij.ide.actions.searcheverywhere.SearchEverywhereContributor
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.project.Project
@@ -67,7 +70,8 @@ class NadleTaskSearchEverywhereContributor(
 		consumer: Processor<in NadleTask>
 	) {
 		val basePath = project.basePath ?: return
-		val tasks = NadleTaskScanner.scanTasksDetailed(Path.of(basePath))
+		val tasks = loadTasksFromProjectService()
+			?: NadleTaskScanner.scanTasksDetailed(Path.of(basePath))
 
 		val matcher = if (pattern.isNotEmpty()) {
 			NameUtil.buildMatcher("*$pattern").build()
@@ -81,5 +85,44 @@ class NadleTaskSearchEverywhereContributor(
 				consumer.process(task)
 			}
 		}
+	}
+
+	private fun loadTasksFromProjectService(): List<NadleTask>? {
+		val projectInfo = NadleProjectService.getInstance(project).getProjectInfo()
+			?: return null
+
+		val tasks = mutableListOf<NadleTask>()
+		val allWorkspaces = listOf(projectInfo.rootWorkspace) + projectInfo.workspaces
+
+		for (workspace in allWorkspaces) {
+			val configPath = workspace.configFilePath ?: continue
+			val configFile = Path.of(configPath)
+			if (!java.nio.file.Files.exists(configFile)) continue
+
+			val text = try {
+				java.nio.file.Files.readString(configFile)
+			} catch (_: java.io.IOException) {
+				continue
+			}
+
+			val taskNames = NadleFileUtil.extractAllTaskNames(text)
+			val isRoot = NadleKernel.isRootWorkspaceId(workspace.id)
+
+			for (name in taskNames) {
+				val qualifiedName = NadleKernel.composeTaskIdentifier(
+					if (isRoot) "" else workspace.id,
+					name
+				)
+				tasks.add(
+					NadleTask(
+						name = qualifiedName,
+						configFilePath = configFile.toAbsolutePath(),
+						workingDirectory = configFile.parent.toAbsolutePath()
+					)
+				)
+			}
+		}
+
+		return tasks
 	}
 }
