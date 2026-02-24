@@ -62,13 +62,16 @@ class NadleProjectService(private val project: Project) : Disposable {
 
 	private fun resolveCliPath(): String? {
 		val basePath = project.basePath ?: return null
+		val nodeModules = Path.of(basePath, "node_modules")
 
-		val candidate = Path.of(
-			basePath, "node_modules", "@nadle", "project-resolver", "cli.mjs"
-		)
-		if (Files.exists(candidate)) {
-			LOG.info("Found nadle-project-resolver at: $candidate")
-			return candidate.toString()
+		val direct = nodeModules.resolve("@nadle/project-resolver/cli.mjs")
+		if (Files.exists(direct)) return direct.toString()
+
+		val nadleLink = nodeModules.resolve("nadle")
+		if (Files.exists(nadleLink)) {
+			val sibling = nadleLink.toRealPath().parent
+				.resolve("@nadle/project-resolver/cli.mjs")
+			if (Files.exists(sibling)) return sibling.toString()
 		}
 
 		return null

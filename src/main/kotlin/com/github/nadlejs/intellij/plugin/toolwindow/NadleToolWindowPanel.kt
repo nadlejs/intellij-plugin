@@ -403,4 +403,5 @@ class NadleToolWindowPanel(
 
 		override fun getActionUpdateThread() = ActionUpdateThread.EDT
 	}
+
 }
