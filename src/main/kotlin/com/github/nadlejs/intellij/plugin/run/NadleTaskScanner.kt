@@ -1,7 +1,7 @@
 package com.github.nadlejs.intellij.plugin.run
 
 import com.github.nadlejs.intellij.plugin.util.NadleFileUtil
-import java.io.File
+import com.github.nadlejs.intellij.plugin.util.NadleKernel
 import java.io.IOException
 import java.nio.file.FileVisitResult
 import java.nio.file.Files
@@ -15,8 +15,6 @@ object NadleTaskScanner {
 		"node_modules", ".git", "dist", "build",
 		".next", ".nuxt", "coverage", ".turbo", ".cache", "out"
 	)
-
-	private val CONFIG_PATTERN = Regex("""^nadle\.config\.[cm]?[jt]s$""")
 
 	fun scanTasks(rootDir: Path): List<String> =
 		scanTasksDetailed(rootDir).map { it.name }.sorted()
@@ -41,7 +39,7 @@ object NadleTaskScanner {
 				file: Path,
 				attrs: BasicFileAttributes
 			): FileVisitResult {
-				if (CONFIG_PATTERN.matches(file.fileName.toString())) {
+				if (NadleFileUtil.isNadleConfigFileName(file.fileName.toString())) {
 					val text = try {
 						Files.readString(file)
 					} catch (_: IOException) {
@@ -52,13 +50,14 @@ object NadleTaskScanner {
 					val relDir = rootDir.relativize(file.parent)
 
 					for (name in names) {
-						val qualifiedName = if (relDir.toString().isEmpty()) {
+						val workspaceId = NadleKernel.deriveWorkspaceId(
+							relDir.toString().ifEmpty { "." }
+						)
+						val qualifiedName = NadleKernel.composeTaskIdentifier(
+							if (NadleKernel.isRootWorkspaceId(workspaceId)) ""
+							else workspaceId,
 							name
-						} else {
-							val prefix = relDir.toString()
-								.replace(File.separatorChar, ':')
-							":$prefix:$name"
-						}
+						)
 						tasks.add(
 							NadleTask(
 								name = qualifiedName,

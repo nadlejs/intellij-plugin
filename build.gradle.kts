@@ -148,6 +148,13 @@ abstract class BundleLspServerTask : DefaultTask() {
         File(serverPkg, "lib").listFiles()?.filter { it.name.endsWith(".js") }?.forEach {
             it.copyTo(File(libDir, it.name), overwrite = true)
         }
+
+        // Write manifest listing all files for runtime extraction
+        val files = mutableListOf("server.mjs", "lib/package.json")
+        File(serverPkg, "lib").listFiles()?.filter { it.name.endsWith(".js") }?.forEach {
+            files.add("lib/${it.name}")
+        }
+        File(outputDir, "manifest.txt").writeText(files.joinToString("\n"))
     }
 }
 

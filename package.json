@@ -1,6 +1,7 @@
 {
   "private": true,
   "devDependencies": {
-    "@nadle/language-server": "https://pkg.pr.new/nadlejs/nadle/@nadle/language-server@bd64301"
+    "@nadle/language-server": "https://pkg.pr.new/nadlejs/nadle/@nadle/language-server@4e92eba",
+    "@nadle/project-resolver": "https://pkg.pr.new/nadlejs/nadle/@nadle/project-resolver@4e92eba"
   }
 }
