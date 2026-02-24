@@ -2,7 +2,6 @@ package com.github.nadlejs.intellij.plugin.lsp
 
 import com.intellij.openapi.application.PathManager
 import com.intellij.openapi.diagnostic.Logger
-import java.io.InputStream
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
@@ -11,25 +10,28 @@ object NadleLspServerExtractor {
 
 	private val LOG = Logger.getInstance(NadleLspServerExtractor::class.java)
 
-	private val SERVER_FILES = listOf(
-		"server.mjs",
-		"package.json",
-		"lib/server.js"
-	)
-
-	private const val RESOURCE_PREFIX = "/language-server/"
+	private const val RESOURCE_PREFIX = "language-server/"
+	private const val MANIFEST = "manifest.txt"
+	private const val VERSION_FILE = ".version"
 
 	fun getServerPath(): Path? {
 		val extractDir = getExtractDirectory()
 		val serverMjs = extractDir.resolve("server.mjs")
 
-		if (Files.exists(serverMjs)) {
+		val currentVersion = getResourceVersion()
+		val extractedVersion = readFile(extractDir.resolve(VERSION_FILE))
+
+		if (Files.exists(serverMjs) && currentVersion == extractedVersion) {
 			return serverMjs
 		}
 
 		return try {
+			if (Files.exists(extractDir)) {
+				extractDir.toFile().deleteRecursively()
+			}
 			extractServer(extractDir)
-			serverMjs
+			Files.writeString(extractDir.resolve(VERSION_FILE), currentVersion)
+			if (Files.exists(serverMjs)) serverMjs else null
 		} catch (e: Exception) {
 			LOG.warn("Failed to extract bundled language server", e)
 			null
@@ -39,81 +41,39 @@ object NadleLspServerExtractor {
 	private fun extractServer(extractDir: Path) {
 		Files.createDirectories(extractDir.resolve("lib"))
 
-		for (file in SERVER_FILES) {
-			extractResource(RESOURCE_PREFIX + file, extractDir.resolve(file))
+		val manifest = loadManifest() ?: run {
+			LOG.warn("Language server manifest not found in resources")
+			return
 		}
 
-		// Extract chunk files (name contains hash)
-		extractChunks(extractDir.resolve("lib"))
-	}
-
-	private fun extractChunks(libDir: Path) {
-		val chunkStream = javaClass.getResourceAsStream("/language-server/lib/") ?: return
-
-		// Since we can't list JAR resources directly, extract known chunk
-		// by scanning the lib directory resource listing
-		val libResource = javaClass.getResource("/language-server/lib/")
-		if (libResource != null) {
-			// Try to find chunk files from classloader
-			val classLoader = javaClass.classLoader
-			val resourceUrl = classLoader.getResource("language-server/lib/")
-			if (resourceUrl != null) {
-				// Read the directory listing if available
-				try {
-					val connection = resourceUrl.openConnection()
-					if (connection is java.net.JarURLConnection) {
-						val jar = connection.jarFile
-						val entries = jar.entries()
-						while (entries.hasMoreElements()) {
-							val entry = entries.nextElement()
-							if (entry.name.startsWith("language-server/lib/chunk-")
-								&& entry.name.endsWith(".js")
-							) {
-								val fileName = entry.name.substringAfterLast("/")
-								val target = libDir.resolve(fileName)
-								jar.getInputStream(entry).use { input ->
-									Files.copy(
-										input, target,
-										StandardCopyOption.REPLACE_EXISTING
-									)
-								}
-							}
-						}
-					}
-				} catch (e: Exception) {
-					LOG.warn("Failed to extract chunk files via JAR listing", e)
-				}
+		for (file in manifest) {
+			val stream = javaClass.classLoader
+				.getResourceAsStream("$RESOURCE_PREFIX$file") ?: run {
+				LOG.debug("Skipping missing resource: $file")
+				continue
 			}
-		}
 
-		// Fallback: try known chunk pattern
-		if (Files.list(libDir).noneMatch {
-				it.fileName.toString().startsWith("chunk-")
-			}) {
-			// Try extracting with the known filename from build time
-			val knownChunks = listOf("chunk-KPQ3WXPR.js")
-			for (chunk in knownChunks) {
-				extractResource(
-					RESOURCE_PREFIX + "lib/" + chunk,
-					libDir.resolve(chunk)
-				)
-			}
+			val target = extractDir.resolve(file)
+			Files.createDirectories(target.parent)
+			stream.use { Files.copy(it, target, StandardCopyOption.REPLACE_EXISTING) }
 		}
 	}
 
-	private fun extractResource(resourcePath: String, target: Path) {
-		val stream: InputStream = javaClass.getResourceAsStream(resourcePath)
-			?: throw IllegalStateException("Resource not found: $resourcePath")
-
-		stream.use {
-			Files.copy(it, target, StandardCopyOption.REPLACE_EXISTING)
-		}
+	private fun loadManifest(): List<String>? {
+		val stream = javaClass.classLoader
+			.getResourceAsStream("$RESOURCE_PREFIX$MANIFEST") ?: return null
+		return stream.bufferedReader().use { it.readLines() }
+			.filter { it.isNotBlank() }
 	}
 
-	private fun getExtractDirectory(): Path {
-		return Path.of(
-			PathManager.getPluginsPath(),
-			"nadle-language-server"
-		)
+	private fun getResourceVersion(): String {
+		val manifest = loadManifest() ?: return "unknown"
+		return manifest.sorted().joinToString(",").hashCode().toString()
 	}
+
+	private fun readFile(path: Path): String? =
+		if (Files.exists(path)) Files.readString(path).trim() else null
+
+	private fun getExtractDirectory(): Path =
+		Path.of(PathManager.getPluginsPath(), "nadle-language-server")
 }
