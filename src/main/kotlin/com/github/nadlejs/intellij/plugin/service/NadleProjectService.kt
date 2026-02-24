@@ -44,6 +44,12 @@ class NadleProjectService(private val project: Project) : Disposable {
 		subscribeToVfsChanges()
 	}
 
+	fun findWorkspaceByConfigFile(configFilePath: String): WorkspaceInfo? {
+		val projectInfo = getProjectInfo() ?: return null
+		val allWorkspaces = listOf(projectInfo.rootWorkspace) + projectInfo.workspaces
+		return allWorkspaces.find { it.configFilePath == configFilePath }
+	}
+
 	fun getProjectInfo(): ProjectInfo? {
 		cachedProject.get()?.let { return it }
 		return refresh()

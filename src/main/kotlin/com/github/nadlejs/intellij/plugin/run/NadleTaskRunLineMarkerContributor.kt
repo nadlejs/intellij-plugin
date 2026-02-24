@@ -1,11 +1,14 @@
 package com.github.nadlejs.intellij.plugin.run
 
+import com.github.nadlejs.intellij.plugin.service.NadleProjectService
 import com.github.nadlejs.intellij.plugin.util.NadleFileUtil
+import com.github.nadlejs.intellij.plugin.util.NadleKernel
 import com.intellij.execution.lineMarker.ExecutorAction
 import com.intellij.execution.lineMarker.RunLineMarkerContributor
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
+import java.nio.file.Path
 import javax.swing.Icon
 
 class NadleTaskRunLineMarkerContributor : RunLineMarkerContributor() {
@@ -24,12 +27,13 @@ class NadleTaskRunLineMarkerContributor : RunLineMarkerContributor() {
 		if (element.text != "tasks") return null
 
 		val callText = findEnclosingCallText(element) ?: return null
-		val taskName = NadleFileUtil.extractTaskName(callText) ?: return null
+		val rawTaskName = NadleFileUtil.extractTaskName(callText) ?: return null
+		val qualifiedName = qualifyTaskName(rawTaskName, virtualFile.path, element.project)
 
-		val icon = getTaskStateIcon(virtualFile.path, taskName, element.project)
+		val icon = getTaskStateIcon(virtualFile.path, qualifiedName, element.project)
 		val actions = ExecutorAction.getActions(0)
 
-		return Info(icon, actions) { "Run Nadle task: $taskName" }
+		return Info(icon, actions) { "Run Nadle task: $qualifiedName" }
 	}
 
 	private fun findEnclosingCallText(element: PsiElement): String? {
@@ -47,6 +51,31 @@ class NadleTaskRunLineMarkerContributor : RunLineMarkerContributor() {
 	}
 
 	companion object {
+
+		fun qualifyTaskName(
+			rawTaskName: String,
+			configFilePath: String,
+			project: Project
+		): String {
+			val workspace = NadleProjectService.getInstance(project)
+				.findWorkspaceByConfigFile(configFilePath)
+			if (workspace != null) {
+				val isRoot = NadleKernel.isRootWorkspaceId(workspace.id)
+				return NadleKernel.composeTaskIdentifier(
+					if (isRoot) "" else workspace.id,
+					rawTaskName
+				)
+			}
+
+			val basePath = project.basePath ?: return rawTaskName
+			val configDir = Path.of(configFilePath).parent ?: return rawTaskName
+			val relativeDir = Path.of(basePath).relativize(configDir).toString()
+			val workspaceId = NadleKernel.deriveWorkspaceId(relativeDir.ifEmpty { "." })
+			return NadleKernel.composeTaskIdentifier(
+				if (NadleKernel.isRootWorkspaceId(workspaceId)) "" else workspaceId,
+				rawTaskName
+			)
+		}
 
 		private fun getTaskStateIcon(
 			filePath: String,

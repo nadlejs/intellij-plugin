@@ -89,6 +89,7 @@ class NadleToolWindowPanel(
 
 		val tasks = mutableListOf<NadleTask>()
 		val allWorkspaces = listOf(projectInfo.rootWorkspace) + projectInfo.workspaces
+		val projectDir = Path.of(projectInfo.projectDir)
 
 		for (workspace in allWorkspaces) {
 			val configPath = workspace.configFilePath ?: continue
@@ -113,7 +114,7 @@ class NadleToolWindowPanel(
 					NadleTask(
 						name = qualifiedName,
 						configFilePath = configFile.toAbsolutePath(),
-						workingDirectory = configFile.parent.toAbsolutePath()
+						workingDirectory = projectDir.toAbsolutePath()
 					)
 				)
 			}

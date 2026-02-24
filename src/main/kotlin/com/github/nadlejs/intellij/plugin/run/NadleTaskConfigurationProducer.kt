@@ -25,12 +25,15 @@ class NadleTaskConfigurationProducer : LazyRunConfigurationProducer<NadleTaskRun
 			return false
 		}
 
-		val taskName = findTaskName(element) ?: return false
+		val rawTaskName = findTaskName(element) ?: return false
+		val qualifiedName = NadleTaskRunLineMarkerContributor.qualifyTaskName(
+			rawTaskName, virtualFile.path, context.project
+		)
 
-		configuration.taskName = taskName
+		configuration.taskName = qualifiedName
 		configuration.configFilePath = virtualFile.path
-		configuration.name = taskName
-		configuration.workingDirectory = virtualFile.parent?.path ?: ""
+		configuration.name = qualifiedName
+		configuration.workingDirectory = context.project.basePath ?: ""
 
 		return true
 	}
@@ -42,9 +45,12 @@ class NadleTaskConfigurationProducer : LazyRunConfigurationProducer<NadleTaskRun
 		val element = context.psiLocation ?: return false
 		val file = element.containingFile ?: return false
 		val virtualFile = file.virtualFile ?: return false
-		val taskName = findTaskName(element) ?: return false
+		val rawTaskName = findTaskName(element) ?: return false
+		val qualifiedName = NadleTaskRunLineMarkerContributor.qualifyTaskName(
+			rawTaskName, virtualFile.path, context.project
+		)
 
-		return taskName == configuration.taskName
+		return qualifiedName == configuration.taskName
 			&& virtualFile.path == configuration.configFilePath
 	}
 
